@@ -35,6 +35,7 @@ class Cleaner(object):
                 fitld = AIPSTask('fitld')
                 fitld.datain = self.args["dataPath"]
                 fitld.outname = self.args["name"]
+                fitld.outseq = self.args["inseq"]
                 fitld.ncount = self.args["fileCount"]
                 fitld.doconcat = 1
                 snVers = 0
@@ -47,8 +48,11 @@ class Cleaner(object):
                     uvdata.clrstat()
                     uvdata.zap_table('SN', -1)
                     uvdata.zap_table('BP', -1)
+                    uvdata.zap_table('TY', -1)
+                    uvdata.zap_table('GC', -1)
+                    tablesToDelete = 0
                     for i in uvdata.tables:
-                        if i[1] == 'AIPS CL':
+                        if i[1] == 'AIPS CL' and i[0]>tablesToDelete:
                             tablesToDelete = i[0]
                     for k in range(tablesToDelete,1,-1):
                         uvdata.zap_table('CL', k)
@@ -62,6 +66,7 @@ class Cleaner(object):
                     clVers = 1
                 else:
                     print("Going direclty to imaging.")
+                    """
                     snVers = 0
                     clVers = 0
                     for i in uvdata.tables:
@@ -69,12 +74,21 @@ class Cleaner(object):
                             snVers = i[0]
                         if i[1] == 'AIPS CL' and i[0] > clVers:
                             clVers = i[0]
+                    """
+                    clVers = int(raw_input("What cl table would you like to use? "))
                     loc = location_finder.Location_finder(clVers, **self.args)
         elif not uvdata.exists():
+            if imgClean.exists():
+                imgClean.clrstat()
+                imgClean.zap()
+            if imgDirty.exists():
+                imgDirty.clrstat()
+                imgDirty.zap()
             print("Loading data")
             fitld = AIPSTask('fitld')
             fitld.datain = self.args["dataPath"]
             fitld.outname = self.args["name"]
+            fitld.outseq = self.args["inseq"]
             fitld.ncount = self.args["fileCount"]
             fitld.doconcat = 1
             snVers = 0
@@ -88,31 +102,32 @@ class Cleaner(object):
                     snVers = i[0]
                 if i[1] == 'AIPS CL' and i[0] > clVers:
                     clVers = i[0]
-
+                
         print("Running bandpass")
         bpass = AIPSTask('BPASS')
         bpass.indata = uvdata
         bpass.calsour[1] = self.args["bandPassCal"]
         bpass.timer = self.args["time"]
+        bpass.refant = self.args["refTelly"]
         bpass.go()
 
-        print("Running Fring.")
-        fring = AIPSTask('fring') #finds fringes
-        fring.indata = uvdata
-        fring.calsour[1] = self.args["cal"]
-        fring.bchan = 30
-        fring.echan = 240
-        fring.timer = self.args["time"]
-        fring.refant = self.args["refTelly"]
-        fring.doband = 1
-        fring.bpver = 1
+        print("Running antab")
+        antab = AIPSTask('ANTAB')
+        antab.indata = uvdata
+        antab.calin = self.args["antPath"]
+        antab.go()
         
-        fring.go()
-
+        print("Running apcal")
+        apcal = AIPSTask('APCAL')
+        apcal.indata = uvdata
+        apcal.timer = self.args["time"]
+        apcal.tyver = 1
+        apcal.gcver = 1
+        apcal.go()
+        
         snVers = snVers + 1
-        print("Fring created SN table {0}".\
-              format(snVers))
-
+        print("apcal made snVers {0}".format(snVers))
+        
         #applies new SN table to CL
         print("Running clcal.")
         clcal = AIPSTask('clcal') 
@@ -125,8 +140,49 @@ class Cleaner(object):
         clcal.timer = self.args["time"]
         clcal.interpol = "ambg"
         clcal.opcode = "calp"
+        clcal.refant = self.args["refTelly"]
         clcal.go()
 
+        clVers = clVers + 1
+        print("clcal made cl table {0}".format(clVers))
+
+        print("Running Fring.")
+        fring = AIPSTask('fring') #finds fringes
+        fring.indata = uvdata
+        fring.calsour[1] = self.args["cal"]
+        fring.bchan = self.args["bchan"]
+        fring.echan = self.args["echan"]
+        fring.timer = self.args["time"]
+        fring.refant = self.args["refTelly"]
+        fring.doband = 1
+        fring.bpver = 1
+        fring.go()
+
+        snVers = snVers + 1
+        print("Fring created SN table {0}".\
+              format(snVers))
+
+        """
+        #applies new SN table to CL
+        print("Running clcal.")
+        clcal = AIPSTask('clcal') 
+        clcal.indata = uvdata
+        clcal.calsour[1] = self.args["cal"]
+        clcal.timerang = self.args["time"]
+        clcal.snver = snVers
+        clcal.inver = snVers
+        clcal.gainver = clInit #apply to original cl
+        clcal.timer = self.args["time"]
+        clcal.interpol = "ambg"
+        clcal.opcode = "calp"
+        clcal.refant = self.args["refTelly"]
+        clcal.go()
+        """
+        clcal.snver = snVers
+        clcal.inver = snVers
+        clcal.gainver = clInit +1 #WHAT SHOULD THIS BE?
+        clcal.go()
+        
         clVers = clVers + 1 
         clFring = clVers
         print("Clcal created CL table {0}".\
@@ -146,6 +202,7 @@ class Cleaner(object):
         calib.doband = 1
         calib.bpver = 1
         calib.timer = self.args["time"]
+        calib.refant = self.args["refTelly"]
         calib.go()
 
         snVers = snVers + 1
@@ -178,11 +235,11 @@ class Cleaner(object):
         imagr.bpver = 1
         imagr.cellsize = AIPSList([0.0001,0.0001])
         imagr.imsize = AIPSList([256,256])
-        imagr.nboxes = 1
-        imagr.clbox[1] = self.args["cleanBox"]
+        imagr.nboxes = self.args["numBoxes"]
+        imagr.clbox[1:] = self.args["cleanBoxCoords"]
         imagr.niter = 1000
         imagr.go()
-        
+ 
         cleaninseq = iterNum
         imageclean = AIPSImage(self.args["name"], 'ICL001', 1, cleaninseq)
         
@@ -204,7 +261,7 @@ class Cleaner(object):
         calibSelf.indata = uvdata
         calibSelf.calsour[1] = self.args["cal"]
         calibSelf.docalib = 1
-        calibSelf.gainuse = clVers-1
+        calibSelf.gainuse = clFring
         calibSelf.solint = 0.2
         calibSelf.soltype = 'L1'
         calibSelf.solmode = 'A&P'
@@ -213,7 +270,7 @@ class Cleaner(object):
         calibSelf.doband = 1
         calibSelf.bpver = 1
         calibSelf.go()
-        
+
         snVers = snVers + 1
         print("calibSelf created SN table {0}".format(snVers))
 
@@ -246,11 +303,11 @@ class Cleaner(object):
         clcalFinal.inver = snVers
         clcalFinal.gainver = clFring
         clcalFinal.timer = self.args["time"]
+        clcalFinal.refant = self.args["refTelly"]
         clcalFinal.go()
-        
+
         clVers = clVers +1
         print("clcalFinal created CL table {0}".format(clVers))
-        #clVers=clFring #!!!!!!!!!!!      
         loc = location_finder.Location_finder(clVers, **self.args)
 
 if __name__ == "__main__":

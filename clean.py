@@ -15,15 +15,23 @@ def main(**args):
     if os.path.isfile('./images_{0}/locations.txt'.format(args["date"])):
         os.remove('./images_{0}/locations.txt'.format(args["date"]))
 
+    args["bchan"] = 30
+    args["echan"] = 240
+    args["antPath"] = "PWD:NEW.antab"
     logFile = "./images_{0}/log.txt".format(args["date"])
     AIPS.log = open(logFile, 'a')
     timelist = [[0,18,59,30, 1,3,46,30]]#, [1,2,1,30, 1,9,0,30], [1,8,18,30, 1,18,30,0]] 
     for k,j in enumerate(timelist,start=1):
         if k == 1:
             args["refTelly"] = 11
-            args["cleanBox"] = AIPSList([126.67, 121.00, 141.67, 133.67])
+            args["numBoxes"] = 6
+            args["cleanBoxCoords"] = [[None,124.0,125.0,133.0,132.0], [None,133.0,115.0,141.0,129.0],\
+                                      [None,122.0,132.0,131.0,140.0], [None,124.0,119.0,133.0,125.0],\
+                                      [None,131.0,128.0,140.0,136.0], [None,141.33,114.0,145.67,124.0]]
+            args["fitBox"] = [None,129.33,120.67,141.67,132.33]
             args["timeList"] = 'timeranges.list.1'
         elif k == 2:
+            sys.exit()
             args["refTelly"] = 16
             args["cleanBox"] = AIPSList([128.00, 111.00, 142.00, 126.00])
             args["timeList"] = 'timeranges.list.2'
