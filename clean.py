@@ -1,7 +1,7 @@
 from AIPS import AIPS
 from AIPSTask import AIPSTask, AIPSList
 from AIPSData import AIPSUVData, AIPSImage
-import argparse, sys, time, os,cleaner
+import argparse, sys, time, os, cleaner, printer
 vers="v1.0.1"
 """This is to parse the command line arguments and contol the cleaning"""
 
@@ -20,7 +20,7 @@ def main(**args):
     args["antPath"] = "PWD:NEW.antab"
     logFile = "./images_{0}/log.txt".format(args["date"])
     AIPS.log = open(logFile, 'a')
-    timelist = [[0,18,59,30, 1,3,46,30]]#, [1,2,1,30, 1,9,0,30], [1,8,18,30, 1,18,30,0]] 
+    timelist = [[0,18,59,30, 1,3,46,30], [1,2,1,30, 1,9,0,30], [1,8,18,30, 1,18,30,0]] 
     for k,j in enumerate(timelist,start=1):
         if k == 1:
             args["refTelly"] = 11
@@ -31,17 +31,21 @@ def main(**args):
             args["fitBox"] = [None,129.33,120.67,141.67,132.33]
             args["timeList"] = 'timeranges.list.1'
         elif k == 2:
-            sys.exit()
             args["refTelly"] = 16
-            args["cleanBox"] = AIPSList([128.00, 111.00, 142.00, 126.00])
+            args["numBoxes"] = 3
+            args["cleanBoxCoords"] = [[None,121.00,114.00,136.00,146.00],[None,136.00,106.00,144.00,133.00],\
+                                      [None,113.67,146.00,133.6,152.33]]
+            args["fitBox"] = [None,129.00,101.00,141.33,132.67]
             args["timeList"] = 'timeranges.list.2'
         elif k == 3:
             args["refTelly"] = 25
-            args["cleanBox"] = AIPSList([122.33, 102.00, 145.33, 139.33])
+            args["numBoxes"] = 2
+            args["cleanBox"] = [[None,74.00,79.00,189.00,176.00],[187.33,69.00,250.67,132.33]]
+            args["fitBox"] = [None,134.00,114.67,174.33,149.00]
             args["timeList"] = 'timeranges.list.3'
         args["time"] = AIPSList(j) 
         cleaned = cleaner.Cleaner(k, **args)
-                                 
+    ploter.plot()
 if __name__ == "__main__":
     parser=argparse.ArgumentParser(
         description="Image cleaner for MEX",

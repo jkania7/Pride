@@ -308,6 +308,7 @@ class Cleaner(object):
 
         clVers = clVers +1
         print("clcalFinal created CL table {0}".format(clVers))
+
         loc = location_finder.Location_finder(clVers, **self.args)
 
 if __name__ == "__main__":
