@@ -64,12 +64,14 @@ def plot():
     plt.ylabel('Displacement [mas]')
     plt.title('RA and DEC Offsets.')
     plt.grid(True)
+    x0, x1, y0, y1 = plt.axis()
+    plt.axis([x0,x1,-10,10])
     plt.tight_layout()
     plt.margins(0.04,0.04)
     plt.legend()
     fig = plt.gcf()
     plt.show()
-    fig.savefig('displacements.pdf')
+    fig.savefig(os.getcwd()+'/images_{0}/displacements.pdf'.format(date))
     
 
 if __name__ == '__main__':

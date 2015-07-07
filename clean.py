@@ -1,7 +1,8 @@
 from AIPS import AIPS
 from AIPSTask import AIPSTask, AIPSList
 from AIPSData import AIPSUVData, AIPSImage
-import argparse, sys, time, os, cleaner, printer
+import argparse, sys, time, os, cleaner
+from subprocess import call
 vers="v1.0.1"
 """This is to parse the command line arguments and contol the cleaning"""
 
@@ -14,10 +15,13 @@ def main(**args):
         os.makedirs("./images_{0}".format(args["date"]))
     if os.path.isfile('./images_{0}/locations.txt'.format(args["date"])):
         os.remove('./images_{0}/locations.txt'.format(args["date"]))
+    if os.path.isfile('./images_{0}/badtimes.txt'.format(args["date"])):
+        os.remove('./images_{0}/badtimes.txt'.format(args["date"]))
 
     args["bchan"] = 30
     args["echan"] = 240
     args["antPath"] = "PWD:NEW.antab"
+    args["flagPath"] = "PWD:flagout1"
     logFile = "./images_{0}/log.txt".format(args["date"])
     AIPS.log = open(logFile, 'a')
     timelist = [[0,18,59,30, 1,3,46,30], [1,2,1,30, 1,9,0,30], [1,8,18,30, 1,18,30,0]] 
@@ -31,6 +35,7 @@ def main(**args):
             args["fitBox"] = [None,129.33,120.67,141.67,132.33]
             args["timeList"] = 'timeranges.list.1'
         elif k == 2:
+            sys.exit()
             args["refTelly"] = 16
             args["numBoxes"] = 3
             args["cleanBoxCoords"] = [[None,121.00,114.00,136.00,146.00],[None,136.00,106.00,144.00,133.00],\
@@ -45,7 +50,7 @@ def main(**args):
             args["timeList"] = 'timeranges.list.3'
         args["time"] = AIPSList(j) 
         cleaned = cleaner.Cleaner(k, **args)
-    ploter.plot()
+    call(["/astroware/bin/python2.7","ploter.py"]) #need to use special python for matpltlib
 if __name__ == "__main__":
     parser=argparse.ArgumentParser(
         description="Image cleaner for MEX",

@@ -41,6 +41,8 @@ class Location_finder(object):
                 imagr.go()
             except RuntimeError as e:
                 print("\nSomething went wrong!\n  => {0}".format(e))
+                with open(os.getcwd() + '/images_{0}/badtimes.txt'.format(self.args["date"]), 'a') as out:
+                    out.write("{0}\n".format(imgname))
                 good = False
             if good:
                 imgFile = AIPSImage(imgname, 'ICL001',1,1)

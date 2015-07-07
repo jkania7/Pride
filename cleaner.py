@@ -18,7 +18,7 @@ class Cleaner(object):
         uvdata = AIPSUVData(self.args["name"], 'UVDATA', 1, self.args["inseq"])
         imgClean = AIPSImage(self.args["name"], 'ICL001', 1, self.args["inseq"])
         imgDirty = AIPSImage(self.args["name"], 'IBM001', 1, self.args["inseq"])
-        
+        flag = AIPSUVData(self.args["name"], 'UVDATA', 1, 100)
         if uvdata.exists() and iterNum == 1:
             print("Data is already present")
             ans1 = raw_input('Do you want to zap the data (yes/no)? ').upper()
@@ -32,12 +32,23 @@ class Cleaner(object):
                 if imgDirty.exists():
                     imgDirty.clrstat()
                     imgDirty.zap()
+                #if flag.exists():
+                #    flag.clrstat()
+                #    flag.zap()
                 fitld = AIPSTask('fitld')
                 fitld.datain = self.args["dataPath"]
                 fitld.outname = self.args["name"]
                 fitld.outseq = self.args["inseq"]
                 fitld.ncount = self.args["fileCount"]
                 fitld.doconcat = 1
+
+                #fitldFL = AIPSTask("FITLD")
+                #fitldFL.datain = args["flagPath"]
+                #fitldFL.outname = self.args["name"]
+                #fitldFL.outseq = 100
+                #fitldFL.ncount = 1
+                #fitldFL.go()
+
                 snVers = 0
                 clVers = 1
                 fitld.go()
@@ -50,6 +61,7 @@ class Cleaner(object):
                     uvdata.zap_table('BP', -1)
                     uvdata.zap_table('TY', -1)
                     uvdata.zap_table('GC', -1)
+                    uvdata.zap_table('FL', -1)
                     tablesToDelete = 0
                     for i in uvdata.tables:
                         if i[1] == 'AIPS CL' and i[0]>tablesToDelete:
@@ -77,6 +89,7 @@ class Cleaner(object):
                     """
                     clVers = int(raw_input("What cl table would you like to use? "))
                     loc = location_finder.Location_finder(clVers, **self.args)
+                    sys.exit()
         elif not uvdata.exists():
             if imgClean.exists():
                 imgClean.clrstat()
@@ -84,6 +97,9 @@ class Cleaner(object):
             if imgDirty.exists():
                 imgDirty.clrstat()
                 imgDirty.zap()
+            #if flag.exists():
+            #    flag.clrstat()
+            #    flag.zap()
             print("Loading data")
             fitld = AIPSTask('fitld')
             fitld.datain = self.args["dataPath"]
@@ -91,9 +107,17 @@ class Cleaner(object):
             fitld.outseq = self.args["inseq"]
             fitld.ncount = self.args["fileCount"]
             fitld.doconcat = 1
+            fitld.go()
+
+            #fitldFL = AIPSTask("FITLD")
+            #fitldFL.datain = args["flagPath"]
+            #fitldFL.outname = self.args["name"]
+            #fitldFL.outseq = 100
+            #fitldFL.ncount = 1
+            #fitldFL.go()
+
             snVers = 0
             clVers = 1
-            fitld.go()
         else:
             snVers = 0
             clVers = 0
@@ -102,7 +126,28 @@ class Cleaner(object):
                     snVers = i[0]
                 if i[1] == 'AIPS CL' and i[0] > clVers:
                     clVers = i[0]
-                
+
+        if flag.exists():
+            flag.clrstat()
+            flag.zap()
+        fitldFL = AIPSTask("FITLD")
+        fitldFL.datain = args["flagPath"]
+        fitldFL.outname = self.args["name"]
+        fitldFL.outseq = 100
+        fitldFL.ncount = 1
+        fitldFL.go()
+
+        print("Copying flagging")                
+        tacop = AIPSTask("TACOP")
+        tacop.indata = flag
+        tacop.ncount = 1 
+        tacop.outname = self.args["name"]
+        tacop.outseq = self.args["inseq"]
+        tacop.outdisk = 1
+        tacop.outver = 1 
+        tacop.inext = 'fg'
+        tacop.go()        
+        
         print("Running bandpass")
         bpass = AIPSTask('BPASS')
         bpass.indata = uvdata
@@ -149,6 +194,8 @@ class Cleaner(object):
         print("Running Fring.")
         fring = AIPSTask('fring') #finds fringes
         fring.indata = uvdata
+        fring.docalib = 1
+        fring.gainuse = clVers
         fring.calsour[1] = self.args["cal"]
         fring.bchan = self.args["bchan"]
         fring.echan = self.args["echan"]
@@ -180,7 +227,7 @@ class Cleaner(object):
         """
         clcal.snver = snVers
         clcal.inver = snVers
-        clcal.gainver = clInit +1 #WHAT SHOULD THIS BE?
+        clcal.gainver = clVers
         clcal.go()
         
         clVers = clVers + 1 
