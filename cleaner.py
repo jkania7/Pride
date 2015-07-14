@@ -130,6 +130,7 @@ class Cleaner(object):
         if flag.exists():
             flag.clrstat()
             flag.zap()
+        """
         fitldFL = AIPSTask("FITLD")
         fitldFL.datain = args["flagPath"]
         fitldFL.outname = self.args["name"]
@@ -147,7 +148,8 @@ class Cleaner(object):
         tacop.outver = 1 
         tacop.inext = 'fg'
         tacop.go()        
-        
+        """
+        uvdata.zap_table('BP', -1) #create a new bp table for each reftelly
         print("Running bandpass")
         bpass = AIPSTask('BPASS')
         bpass.indata = uvdata
@@ -155,7 +157,7 @@ class Cleaner(object):
         bpass.timer = self.args["time"]
         bpass.refant = self.args["refTelly"]
         bpass.go()
-
+        """
         print("Running antab")
         antab = AIPSTask('ANTAB')
         antab.indata = uvdata
@@ -190,7 +192,7 @@ class Cleaner(object):
 
         clVers = clVers + 1
         print("clcal made cl table {0}".format(clVers))
-
+        """
         print("Running Fring.")
         fring = AIPSTask('fring') #finds fringes
         fring.indata = uvdata
@@ -204,12 +206,18 @@ class Cleaner(object):
         fring.doband = 1
         fring.bpver = 1
         fring.go()
-
+        
         snVers = snVers + 1
+        SN = 0
+        for i in uvdata.tables:
+            if i[1] == 'AIPS SN' and i[0]>SN:
+                SN = i[0]
+        if not SN == snVers:
+            sys.exit("SN table number missmatch")
         print("Fring created SN table {0}".\
               format(snVers))
 
-        """
+        
         #applies new SN table to CL
         print("Running clcal.")
         clcal = AIPSTask('clcal') 
@@ -229,14 +237,20 @@ class Cleaner(object):
         clcal.inver = snVers
         clcal.gainver = clVers
         clcal.go()
-        
+        """
+        CL = 0
         clVers = clVers + 1 
         clFring = clVers
+        for i in uvdata.tables:
+            if i[1] == 'AIPS CL' and i[0]>CL:
+                CL = i[0]
+        if not CL == clVers:
+            sys.exit("CL table number missmatch")
         print("Clcal created CL table {0}".\
               format(clVers))
 
         #determines calibration, creates new SN
-        print("running calib")
+        print("Running calib")
         calib = AIPSTask('calib')
         calib.indata = uvdata
         calib.calsour[1] = self.args["cal"]
@@ -253,6 +267,12 @@ class Cleaner(object):
         calib.go()
 
         snVers = snVers + 1
+        SN = 0
+        for i in uvdata.tables:
+            if i[1] == 'AIPS SN' and i[0]>SN:
+                SN = i[0]
+        if not SN == snVers:
+            sys.exit("SN table number missmatch")
         print("Calib created SN table {0}".\
               format(snVers))
 
@@ -264,6 +284,12 @@ class Cleaner(object):
         clcal.gainver = clVers
         clcal.go() #Apply only to cal
         clVers = clVers + 1
+        CL = 0
+        for i in uvdata.tables:
+            if i[1] == 'AIPS CL' and i[0]>CL:
+                CL = i[0]
+        if not CL == clVers:
+            sys.exit("CL table number missmatch")
         print("Clcal created CL table {0}".format(clVers))
 
         #cleans the image
@@ -286,15 +312,16 @@ class Cleaner(object):
         imagr.clbox[1:] = self.args["cleanBoxCoords"]
         imagr.niter = 1000
         imagr.go()
- 
+        print("Done with imagr")
         cleaninseq = iterNum
         imageclean = AIPSImage(self.args["name"], 'ICL001', 1, cleaninseq)
         
         #to get last positive row
-        for j in imgClean.tables:
-            if j[1] == 'AIPS CC':
+        latestImgTable = 0
+        for j in imageclean.tables:
+            if j[1] == 'AIPS CC' and j[0]>latestImgTable:
                 latestImgTable = j[0]
-        ccTable = imgClean.table('CC', latestImgTable)
+        ccTable = imageclean.table('CC', latestImgTable)
         for row, i in enumerate(ccTable, start=2): #start @ 2 to get last positive
             if i['flux']<0:
                 lastPositive = row
@@ -317,8 +344,16 @@ class Cleaner(object):
         calibSelf.doband = 1
         calibSelf.bpver = 1
         calibSelf.go()
-
         snVers = snVers + 1
+        SN = 0
+        for i in uvdata.tables:
+            if i[1] == 'AIPS SN' and i[0]>SN:
+                SN = i[0]
+        if not SN == snVers:
+            print("SN = {0} , snVers = {1}".format(SN, snVers))
+            sys.exit("SN table number missmatch")
+
+
         print("calibSelf created SN table {0}".format(snVers))
 
         #maked contour plot
@@ -338,6 +373,12 @@ class Cleaner(object):
         clcal.gainver = clVers
         clcal.go() #Apply only to cal
         clVers = clVers + 1
+        CL = 0
+        for i in uvdata.tables:
+            if i[1] == 'AIPS CL' and i[0]>CL:
+                CL = i[0]
+        if not CL == clVers:
+            sys.exit("CL table number missmatch")
         print("clcal created CL table {0}".format(clVers))
 
         print("Running clcal.")
@@ -354,9 +395,17 @@ class Cleaner(object):
         clcalFinal.go()
 
         clVers = clVers +1
+        CL = 0
+        for i in uvdata.tables:
+            if i[1] == 'AIPS CL' and i[0]>CL:
+                CL = i[0]
+        if not CL == clVers:
+            sys.exit("CL table number missmatch")
         print("clcalFinal created CL table {0}".format(clVers))
-
+        imagedirty = AIPSImage(self.args["name"], 'IBM001', 1, cleaninseq)
+        
         loc = location_finder.Location_finder(clVers, **self.args)
-
+        imageclean.zap()
+        imagedirty.zap()
 if __name__ == "__main__":
     sys.exit("This model is not designed to be run by itself, you must use clean.py.")
