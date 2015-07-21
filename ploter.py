@@ -35,7 +35,7 @@ def plot():
     DEC = np.array([DECdeg, DECmin, DECsec, DECerror])       
     DECdecimal = []
     for j in range(len(DEC[0])):
-        DECdecimal.append(DEC[0][j] + DEC[1][j]/60 + DEC[2][j]/3600)
+        DECdecimal.append(DEC[0][j] + DEC[1][j]/60.0 + DEC[2][j]/3600.0)
 
     DECmean = np.mean(DECdecimal)
     #centerRA = centerRA*(360/(23+56/60+4.1/3600)*np.cos(np.deg2rad(DECmean)))
@@ -53,12 +53,12 @@ def plot():
     errDEC = []
 
     for q in range(len(RAdec[0])):
-        displacementRA.append(((RA[2][q] - centerRA)*(360/(23+56/60+4.1/3600)*np.cos(np.deg2rad(DECmean))))*1000)
-        errRA.append((RA[3][q]**(360/(23+56/60+4.1/3600)*np.cos(np.deg2rad(DECmean))))*1000)
-        displacementDEC.append((DEC[2][q] - centerDEC)*1000)
-        errDEC.append(DEC[3][q]*1000)
+        displacementRA.append(((RA[2][q] - centerRA)*(360/(23+56.0/60.0+4.1/3600)*np.cos(np.deg2rad(DECmean))))*1000.0)
+        errRA.append((RA[3][q]**(360/(23+56.0/60.0+4.1/3600)*np.cos(np.deg2rad(DECmean))))*1000.0)
+        displacementDEC.append((DEC[2][q] - centerDEC)*1000.0)
+        errDEC.append(DEC[3][q]*1000.0)
         
-    RAstd = np.std((RA[2]-centerRA)*(360/(23+56/60+4.1/3600)*np.cos(np.deg2rad(DECmean))))
+    RAstd = np.std((RA[2]-centerRA)*(360.0/(23+56.0/60+4.1/3600)*np.cos(np.deg2rad(DECmean))))
     DECstd = np.std(np.square(DEC[2]-centerDEC))
     print("RA std = {0}".format(RAstd))
     print("DEC std = {0}".format(DECstd))
