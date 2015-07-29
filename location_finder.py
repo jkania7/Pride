@@ -27,8 +27,8 @@ class Location_finder(object):
             imagr.bchan = self.args["bchan"]
             imagr.echan = self.args["echan"]
             imagr.nchav = self.args["achan"]
-            imagr.doband = 1
-            imagr.bpver = 1
+            #imagr.doband = 1
+            #imagr.bpver = 1
             imagr.outname = imgname
             imagr.outseq = 1
             imagr.cellsize = AIPSList([0.0001,0.0001])

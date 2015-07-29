@@ -25,14 +25,13 @@ def main(**args):
             args["timeList"] = 'timeranges.list.1'
             args["time"] = AIPSList(j) 
             cleaned1 = cleaner.Cleaner(k, **args)
-        
         elif k == 2:
             args["refTelly"] = 16
             args["CalCleanBox"] = [[None,123.00,117.00,132.00,141.00],[None,126.67,95.33,133.67,117.33]]
             args["fitBox"] = [None,131.00,98.67,143.67,134.00]
             args["timeList"] = 'timeranges.list.2'
             args["time"] = AIPSList(j) 
-            cleaned1 = cleaner.Cleaner(k, **args)
+            cleaned2 = cleaner.Cleaner(k, **args)
         if k == 3:
             args["refTelly"] = 25
             args["CalCleanBox"] = [[None,122.00,121.00,135.00,140.00],[None,135.00,119.33,141.00,133.00]]

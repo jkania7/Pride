@@ -8,6 +8,9 @@ from datetime import datetime
 centerRA  = 59.60
 centerDEC = 55.00
 
+print("\Assuming center RA = {0}".format(centerRA))
+print("Assumign center DEC = {0}".format(centerDEC))
+
 def plot():
     timeList = [];
     RAhour = []; RAmin = []; RAsec = []; RAerror = [];
@@ -58,10 +61,15 @@ def plot():
         displacementDEC.append((DEC[2][q] - centerDEC)*1000.0)
         errDEC.append(DEC[3][q]*1000.0)
         
-    RAstd = np.std((RA[2]-centerRA)*(360.0/(23+56.0/60+4.1/3600)*np.cos(np.deg2rad(DECmean))))
-    DECstd = np.std(np.square(DEC[2]-centerDEC))
-    print("RA std = {0}".format(RAstd))
-    print("DEC std = {0}".format(DECstd))
+    #RAstd = np.std((RA[2]-centerRA)*(360.0/(23+56.0/60+4.1/3600)*np.cos(np.deg2rad(DECmean))))
+    #DECstd = np.std(np.square(DEC[2]-centerDEC))
+    #print("RA std = {0}".format(RAstd))
+    #print("DEC std = {0}".format(DECstd))
+
+    RArms = np.sqrt(np.mean(np.square((RA[2]-centerRA)*(360/(23+56/60+4.1/3600)*np.cos(np.deg2rad(DECmean))))))
+    DECrms = np.sqrt(np.mean(np.square(DEC[2]-centerDEC)))
+    print('\033[32mRA rms = {0}'.format(RArms))
+    print('DEC rms = {0}\033[0m'.format(DECrms))
 
     RAline = plt.errorbar(timeList, displacementRA, yerr=errRA,color='red',marker='o', linestyle='', markersize=3, label='RA')
     DECline = plt.errorbar(timeList, displacementDEC, yerr=errDEC, color='blue',marker='o',linestyle='', label='DEC', markersize = 3)
@@ -75,11 +83,15 @@ def plot():
     plt.tight_layout()
     plt.margins(0.04,0.04)
     plt.legend()
+    
     fig = plt.gcf()
-    if raw_input("Would you like to see the plot? ").upper() == 'YES':
+    if raw_input("\033[33mWould you like to see the plot? \033[0m").upper() == 'YES':
         plt.show()
     fig.savefig(os.getcwd()+'/images_{0}/displacements.pdf'.format(date))
     
-
+    with open(os.getcwd()+'/images_{0}/rms.txt'.format(date), 'w') as f:
+        f.write("RA rms = {0}".format(RArms))
+        f.write("\nDEC rms = {0}".format(DECrms))
+    
 if __name__ == '__main__':
     plot()

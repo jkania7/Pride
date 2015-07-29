@@ -40,6 +40,6 @@ imagr.gainuse = 2
 imagr.sources = AIPSList(['J1232-0224'])
 imagr.dotv = 1
 imagr.imsize = AIPSList([256,256])
-imagr.cellsize = AIPSList([0.00001, 0.00001])
+imagr.cellsize = AIPSList([0.0001, 0.0001])
 imagr.timer  = time
 imagr.go()

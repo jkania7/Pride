@@ -22,7 +22,7 @@ class Cleaner(object):
         flag = AIPSUVData(self.args["name"], 'TASAV', 1, 100)
         if uvdata.exists() and iterNum == 1:
             print("Data is already present")
-            ans1 = raw_input('Do you want to zap the data (yes/no)? ').upper()
+            ans1 = raw_input('\033[33mDo you want to zap the data (yes/no)? \033[0m').upper()
             if ans1 == 'YES':
                 print("Zapping data and reloading.")
                 uvdata.clrstat()
@@ -46,7 +46,7 @@ class Cleaner(object):
                 clVers = 1
                 fitld.go()
             else:
-                ans2 = raw_input('Do you want to zap the tables and images(yes/no)? ').upper()
+                ans2 = raw_input('\033[33mDo you want to zap the tables and images(yes/no)? \033[0m').upper()
                 if ans2 == 'YES':
                     print("Zapping tables/images.")
                     uvdata.clrstat()
@@ -103,7 +103,13 @@ class Cleaner(object):
                     snVers = i[0]
                 if i[1] == 'AIPS CL' and i[0] > clVers:
                     clVers = i[0]
-
+            print("Setting SN table version to {0}".format(snVers))
+            print("Setting CL table version to {0}".format(clVers))
+            uvdata.zap_table('SN', -1)
+            for k in range(clVers,1,-1):
+                uvdata.zap_table('CL', k)
+            snVers = 0
+            clVers = 1
         if imageClean.exists():
             imageClean.clrstat()
             imageClean.zap()
@@ -113,7 +119,7 @@ class Cleaner(object):
         if flag.exists():
             flag.clrstat()
             flag.zap()
-        
+        """
         fitldFL = AIPSTask("FITLD")
         fitldFL.datain = args["flagPath"]
         fitldFL.outname = self.args["name"]
@@ -179,7 +185,7 @@ class Cleaner(object):
 
         clVers = clVers + 1
         print("clcal made cl table {0}".format(clVers))
-
+        """
         print("Running Fring.")
         fring = AIPSTask('fring') #finds fringes
         fring.indata = uvdata
@@ -190,8 +196,8 @@ class Cleaner(object):
         fring.echan = self.args["echan"]
         fring.timer = self.args["time"]
         fring.refant = self.args["refTelly"]
-        fring.doband = 1
-        fring.bpver = 1
+        #fring.doband = 1
+        #fring.bpver = 1
         fring.go()
         
         snVers = snVers + 1
@@ -204,7 +210,7 @@ class Cleaner(object):
         print("Fring created SN table {0}".\
               format(snVers))
 
-        """
+        
         #applies new SN table to CL
         print("Running clcal.")
         clcal = AIPSTask('clcal') 
@@ -215,8 +221,8 @@ class Cleaner(object):
         clcal.inver = snVers
         clcal.gainver = clInit #apply to original cl
         clcal.timer = self.args["time"]
-        clcal.interpol = "ambg"
-        clcal.opcode = "calp"
+        #clcal.interpol = "ambg"
+        #clcal.opcode = "calp"
         clcal.refant = self.args["refTelly"]
         clcal.go()
         """
@@ -224,7 +230,7 @@ class Cleaner(object):
         clcal.inver = snVers
         clcal.gainver = clVers
         clcal.go()
-        
+        """
         CL = 0
         clVers = clVers + 1 
         clFring = clVers
@@ -247,8 +253,8 @@ class Cleaner(object):
         calib.solint = 0.2
         calib.soltype = 'L1'
         calib.solmode = 'P'
-        calib.doband = 1
-        calib.bpver = 1
+        #calib.doband = 1
+        #calib.bpver = 1
         calib.timer = self.args["time"]
         calib.refant = self.args["refTelly"]
         calib.go()
@@ -291,8 +297,8 @@ class Cleaner(object):
         imagr.bchan = self.args["bchan"]
         imagr.echan = self.args["echan"]
         imagr.nchav = self.args["achan"]
-        imagr.doband = 1
-        imagr.bpver = 1
+        #imagr.doband = 1
+        #imagr.bpver = 1
         imagr.cellsize = AIPSList([0.0001,0.0001])
         imagr.imsize = AIPSList([256,256])
         imagr.nboxes = len(self.args["CalCleanBox"])
@@ -326,8 +332,8 @@ class Cleaner(object):
         calibSelf.solmode = 'A&P'
         calibSelf.ncomp[1] = lastPositive
         calibSelf.timer = self.args["time"]
-        calibSelf.doband = 1
-        calibSelf.bpver = 1
+        #calibSelf.doband = 1
+        #calibSelf.bpver = 1
         calibSelf.go()
         snVers = snVers + 1
         SN = 0
@@ -405,6 +411,11 @@ class Cleaner(object):
         loc = location_finder.Location_finder(clVers, **self.args)
         imageClean.zap()
         imageDirty.zap()
-        flag.zap()
+        #flag.zap()
+        
+        with open(os.getcwd() + '/images_{0}/params{1}.txt'.format(self.args["date"],self.iterNum),'w') as f:
+            for l in self.args:
+                f.write("\n{0}".format(l))
+
 if __name__ == "__main__":
     sys.exit("This model is not designed to be run by itself, you must use clean.py.")
