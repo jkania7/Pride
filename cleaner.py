@@ -124,13 +124,14 @@ class Cleaner(object):
         print("Copying flagging")                
         tacop = AIPSTask("TACOP")
         tacop.indata = flag
+        tacop.invers = 3
         tacop.ncount = 1 
         tacop.outname = self.args["name"]
         tacop.outseq = self.args["inseq"]
         tacop.outclass = 'UVDATA'
         tacop.outdisk = 1
-        tacop.outver = 1 
-        tacop.inext = 'fg'
+        tacop.outver = 0
+        tacop.inext = 'FG'
         tacop.go()        
         
         uvdata.zap_table('BP', -1) #create a new bp table for each reftelly
@@ -277,7 +278,7 @@ class Cleaner(object):
         if not CL == clVers:
             sys.exit("CL table number missmatch")
         print("Clcal created CL table {0}".format(clVers))
-
+ 
         #cleans the image
         print("Running imagr")
         imagr = AIPSTask('IMAGR')
@@ -294,8 +295,8 @@ class Cleaner(object):
         imagr.bpver = 1
         imagr.cellsize = AIPSList([0.0001,0.0001])
         imagr.imsize = AIPSList([256,256])
-        imagr.nboxes = self.args["numBoxes"]
-        imagr.clbox[1:] = self.args["cleanBoxCoords"]
+        imagr.nboxes = len(self.args["CalCleanBox"])
+        imagr.clbox[1:] = self.args["CalCleanBox"]
         imagr.niter = 1000
         imagr.go()
         print("Done with imagr")

@@ -87,31 +87,31 @@ class Location_finder(object):
                     out.write("{0}\t{1}\t{2}\t{3:^10}\t{4:^6}\t{5}\t{6}\t{7:^7}\t{8}\n".
                               format(imgname, RA[0], RA[1], RA[2], RA[3], \
                                      DEC[0], DEC[1], DEC[2], DEC[3]))
-            #makes contour plot
-            kntr = AIPSTask('KNTR')
-            kntr.indata = imageClean
-            kntr.levs = AIPSList([2,3,4,5,7,10,13,17])
-            kntr.dogrey = -1
-            kntr.dotv = -1 
-            kntr.dovect = -1 
-            #kntr.blc[1] .80*self.args["fitBox"][1]
-            #kntr.blc[2] .80*self.args["fitBox"][2]
-            #kntr.trc[1] 1.20*self.args["fitBox"][3]
-            #kntr.trc[2] 1.20*self.args["fitBox"][4]
-            kntr.go()
+                #makes contour plot
+                kntr = AIPSTask('KNTR')
+                kntr.indata = imageClean
+                kntr.levs = AIPSList([2,3,4,5,7,10,13,17])
+                kntr.dogrey = -1
+                kntr.dotv = -1 
+                kntr.dovect = -1 
+                #kntr.blc[1] .80*self.args["fitBox"][1]
+                #kntr.blc[2] .80*self.args["fitBox"][2]
+                #kntr.trc[1] 1.20*self.args["fitBox"][3]
+                #kntr.trc[2] 1.20*self.args["fitBox"][4]
+                kntr.go()
+                
+                lwmp = AIPSTask('LWPLA')
+                lwmp.indata = imageClean
+                lwmp.plver = 1
+                lwmp.invers = 1
+                if good:
+                    lwmp.outfile = address +  '.ps'
+                else:
+                    lwmp.outfile = address  + '_bad.ps'
+                lwmp.go()
 
-            lwmp = AIPSTask('LWPLA')
-            lwmp.indata = imageClean
-            lwmp.plver = 1
-            lwmp.invers = 1
-            if good:
-                lwmp.outfile = address +  '.ps'
-            else:
-                lwmp.outfile = address  + '_bad.ps'
-            lwmp.go()
-
-            imageClean.zap()
-            imageDirty.zap()
+                imageClean.zap()
+                imageDirty.zap()
             
                 
 if __name__ == "__main__":

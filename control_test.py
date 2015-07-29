@@ -25,7 +25,7 @@ def main(**args):
             args["timeList"] = 'timeranges.list.1'
             args["time"] = AIPSList(j) 
             cleaned1 = cleaner.Cleaner(k, **args)
-        
+        """
         elif k == 2:
             args["refTelly"] = 16
             args["CalCleanBox"] = [[None,123.00,117.00,132.00,141.00],[None,126.67,95.33,133.67,117.33]]
@@ -40,7 +40,7 @@ def main(**args):
             args["timeList"] = 'timeranges.list.3'
             args["time"] = AIPSList(j) 
             cleaned3 = cleaner.Cleaner(k, **args)
-        
+        """
 
 
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
     args["echan"] = 240
     args["achan"] = 211
     args["antPath"] = "PWD:NEW.antab"
-    args["timeSections"] = [[0,18,59,30, 1,3,46,30], [1,2,1,30, 1,9,0,30], \
+    args["timeSections"] = [[1,10,0,0, 1,18,30,0], [1,2,1,30, 1,9,0,30], \
                            [1,8,18,30, 1,18,30,0]] 
     args["user"] = 916
     args["name"] = "gr035"

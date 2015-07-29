@@ -18,29 +18,38 @@ def main(**args):
     AIPS.log = open(args["logFile"], 'a')
 
     for k,j in enumerate(args["timeSections"],start=1):
+        #------------------------------------
+
         if k == 1:
             args["refTelly"] = 11
-            args["CalCleanBox"] = [[None,122.00,124.00,131.00,134.00], [None, 131.00,121.33,140.67,133.33]]
-            args["fitBox"] = [None, 125.67,122.33,140.67,132.67]
+            args["numBoxes"] = 6
+            args["cleanBoxCoords"] = [[None,124.0,125.0,133.0,132.0], [None,133.0,115.0,141.0,129.0],\
+                                      [None,122.0,132.0,131.0,140.0], [None,124.0,119.0,133.0,125.0],\
+                                      [None,131.0,128.0,140.0,136.0], [None,141.33,114.0,145.67,124.0]]
+            args["fitBox"] = [None,129.33,120.67,141.67,132.33]
             args["timeList"] = 'timeranges.list.1'
+
             args["time"] = AIPSList(j) 
             cleaned1 = cleaner.Cleaner(k, **args)
-        
         elif k == 2:
             args["refTelly"] = 16
-            args["CalCleanBox"] = [[None,123.00,117.00,132.00,141.00],[None,126.67,95.33,133.67,117.33]]
-            args["fitBox"] = [None,131.00,98.67,143.67,134.00]
+            args["numBoxes"] = 3
+            args["cleanBoxCoords"] = [[None,121.00,114.00,136.00,146.00],[None,136.00,106.00,144.00,133.00],\
+                                      [None,113.67,146.00,133.6,152.33]]
+            args["fitBox"] = [None,129.00,101.00,141.33,132.67]
             args["timeList"] = 'timeranges.list.2'
             args["time"] = AIPSList(j) 
             cleaned1 = cleaner.Cleaner(k, **args)
         if k == 3:
             args["refTelly"] = 25
-            args["CalCleanBox"] = [[None,122.00,121.00,135.00,140.00],[None,135.00,119.33,141.00,133.00]]
-            args["fitBox"] = [None, 128.33,107.67,138.67,129.33]
+            args["numBoxes"] = 2
+            args["cleanBoxCoords"] = [[None,74.00,79.00,189.00,176.00],[None,187.33,69.00,250.67,132.33]]
+            args["fitBox"] = [None,134.00,114.67,174.33,149.00]
             args["timeList"] = 'timeranges.list.3'
+            #------------------------------------
             args["time"] = AIPSList(j) 
             cleaned3 = cleaner.Cleaner(k, **args)
-        
+   
 
 
 
