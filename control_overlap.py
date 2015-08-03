@@ -5,7 +5,7 @@ import sys, time, os, cleaner
 from subprocess import call
 
 def main(**args):
-    args["date"] = "{0}{1}".format(time.strftime("%d"), time.strftime("%B"))[0:5]
+    args["date"] = "{0}{1}".format(time.strftime("%d"), time.strftime("%B"))
     args["logFile"] = "./images_{0}/log.txt".format(args["date"])
 
     if not os.path.exists("./images_{0}".format(args["date"])):
@@ -19,14 +19,10 @@ def main(**args):
 
     for k,j in enumerate(args["timeSections"],start=1):
         if k == 1:
-            args["refTelly"] = 10
+            args["refTelly"] = 11
             args["CalCleanBox"] = [[None,122.00,124.00,131.00,134.00], [None, 131.00,121.33,140.67,133.33]]
             args["fitBox"] = [None, 125.67,122.33,140.67,132.67]
             args["timeList"] = 'timeranges.list.1'
-            args["SCbchan"] = 30
-            args["SCechan"] = 240
-            args["excludeTelly"] = True
-            args["excludedTellys"] = [-7]
             args["time"] = AIPSList(j) 
             cleaned1 = cleaner.Cleaner(k, **args)
         elif k == 2:
@@ -34,9 +30,6 @@ def main(**args):
             args["CalCleanBox"] = [[None,123.00,117.00,132.00,141.00],[None,126.67,95.33,133.67,117.33]]
             args["fitBox"] = [None,131.00,98.67,143.67,134.00]
             args["timeList"] = 'timeranges.list.2'
-            args["SCbchan"] = 130
-            args["SCechan"] = 170
-            args["excludeTelly"] = False 
             args["time"] = AIPSList(j) 
             cleaned2 = cleaner.Cleaner(k, **args)
         if k == 3:
@@ -44,12 +37,9 @@ def main(**args):
             args["CalCleanBox"] = [[None,122.00,121.00,135.00,140.00],[None,135.00,119.33,141.00,133.00]]
             args["fitBox"] = [None, 128.33,107.67,138.67,129.33]
             args["timeList"] = 'timeranges.list.3'
-            args["SCbchan"] = 30
-            args["SCechan"] = 240
-            args["excludeTelly"] = False
             args["time"] = AIPSList(j) 
             cleaned3 = cleaner.Cleaner(k, **args)
-    
+        
 
 
 
@@ -59,8 +49,10 @@ if __name__ == "__main__":
     args["flagPath"] = "PWD:flagout"
     args["bchan"] = 30
     args["echan"] = 240
+    args["SCbchan"] = 130
+    args["SCechan"] = 170
     args["antPath"] = "PWD:NEW.antab"
-    args["timeSections"] = [[0,18,59,30, 1,3,46,30], [1,3,46,30, 1,18,18,30], \
+    args["timeSections"] = [[0,18,59,30, 1,3,46,30], [1,2,1,30, 1,9,0,30], \
                            [1,8,18,30, 1,18,30,0]] 
     args["user"] = 916
     args["name"] = "gr035"

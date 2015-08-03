@@ -7,6 +7,8 @@ from datetime import datetime
 
 centerRA  = 59.60
 centerDEC = 55.00
+offsetMin = 3 #time set to middle of scan 
+offsetSec = 30
 
 print("\Assuming center RA = {0}".format(centerRA))
 print("Assumign center DEC = {0}".format(centerDEC))
@@ -16,7 +18,7 @@ def plot():
     RAhour = []; RAmin = []; RAsec = []; RAerror = [];
     DECdeg = []; DECmin = []; DECsec = []; DECerror = [];
     
-    date = "{0}{1}".format(time.strftime("%d"), time.strftime("%B"))
+    date = "{0}{1}".format(time.strftime("%d"), time.strftime("%B")[0:3])
     with open(os.getcwd() + '/images_{0}/locations.txt'.format(date), 'r') as f:
         for l in f.readlines():
             [imgnameTemp, RAhourT, RAminT, RAsecT, RAerrorT, \
@@ -24,7 +26,19 @@ def plot():
             day = int(imgnameTemp[0])
             hour = int(imgnameTemp[1:3])
             minutes = int(imgnameTemp[3:5])
-            timeList.append(datetime(2013, 12, 28 + day, hour, minutes))
+            second = int(imgnameTemp[5:7])
+            second = second + offsetSec
+            if second >= 60:
+                minutes = minutes + 1 
+                second = second - 60
+            minutes = minutes + offsetMin
+            if minutes >= 60:
+                hour = hour + 1
+                minutes = minutes - 60
+            if hour >= 24:
+                day = day + 1
+                hour = hour - 24
+            timeList.append(datetime(2013, 12, 28 + day, hour, minutes, second))
             RAhour.append(float(RAhourT))
             RAmin.append(float(RAminT))
             RAsec.append(float(RAsecT))
@@ -39,6 +53,8 @@ def plot():
     DECdecimal = []
     for j in range(len(DEC[0])):
         DECdecimal.append(DEC[0][j] + DEC[1][j]/60.0 + DEC[2][j]/3600.0)
+    print("Number of RA points {0}".format(len(RA[0])))
+    print("Number of DEC points {0}".format(len(DEC[0])))
 
     DECmean = np.mean(DECdecimal)
     #centerRA = centerRA*(360/(23+56/60+4.1/3600)*np.cos(np.deg2rad(DECmean)))
@@ -56,9 +72,9 @@ def plot():
     errDEC = []
 
     for q in range(len(RAdec[0])):
-        displacementRA.append(((RA[2][q] - centerRA)*(360/(23+56.0/60.0+4.1/3600)*np.cos(np.deg2rad(DECmean))))*1000.0)
+        displacementRA.append(((centerRA - RA[2][q])*(360/(23+56.0/60.0+4.1/3600)*np.cos(np.deg2rad(DECmean))))*1000.0)
         errRA.append((RA[3][q]**(360/(23+56.0/60.0+4.1/3600)*np.cos(np.deg2rad(DECmean))))*1000.0)
-        displacementDEC.append((DEC[2][q] - centerDEC)*1000.0)
+        displacementDEC.append((DEC[2][q]-centerDEC)*1000.0)
         errDEC.append(DEC[3][q]*1000.0)
         
     #RAstd = np.std((RA[2]-centerRA)*(360.0/(23+56.0/60+4.1/3600)*np.cos(np.deg2rad(DECmean))))

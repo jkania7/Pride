@@ -19,6 +19,8 @@ class Cleaner(object):
         cleaninseq = iterNum
         imageClean = AIPSImage(self.args["name"], 'ICL001', 1, cleaninseq)
         imageDirty = AIPSImage(self.args["name"], 'IBM001', 1, cleaninseq)
+        imageCleanSC = AIPSImage(self.args["source"], 'ICL001', 1, 1)
+        imageDirtySC = AIPSImage(self.args["source"], 'IBM001', 1, 1)
         flag = AIPSUVData(self.args["name"], 'TASAV', 1, 100)
         if uvdata.exists() and iterNum == 1:
             print("Data is already present")
@@ -103,8 +105,7 @@ class Cleaner(object):
                     snVers = i[0]
                 if i[1] == 'AIPS CL' and i[0] > clVers:
                     clVers = i[0]
-            print("Setting SN table version to {0}".format(snVers))
-            print("Setting CL table version to {0}".format(clVers))
+            print("Deleting tables.")
             uvdata.zap_table('SN', -1)
             for k in range(clVers,1,-1):
                 uvdata.zap_table('CL', k)
@@ -191,6 +192,8 @@ class Cleaner(object):
         fring.indata = uvdata
         fring.docalib = 1
         fring.gainuse = clVers
+        if self.args["excludeTelly"]:
+            fring.antennas[1:] = self.args["excludedTellys"]
         fring.calsour[1] = self.args["cal"]
         fring.bchan = self.args["bchan"]
         fring.echan = self.args["echan"]
@@ -217,6 +220,8 @@ class Cleaner(object):
         clcal.indata = uvdata
         clcal.calsour[1] = self.args["cal"]
         clcal.timerang = self.args["time"]
+        if self.args["excludeTelly"]:
+            clcal.antennas[1:] = self.args["excludedTellys"]
         clcal.snver = snVers
         clcal.inver = snVers
         clcal.gainver = clInit #apply to original cl
@@ -249,6 +254,8 @@ class Cleaner(object):
         calib.calsour[1] = self.args["cal"]
         calib.docalib = 1
         calib.gainuse = clVers
+        if self.args["excludeTelly"]:
+            calib.antennas[1:] = self.args["excludedTellys"]
         calib.smodel[1] = 1
         calib.solint = 0.2
         calib.soltype = 'L1'
@@ -296,9 +303,11 @@ class Cleaner(object):
         imagr.gainuse = clVers
         imagr.bchan = self.args["bchan"]
         imagr.echan = self.args["echan"]
-        imagr.nchav = self.args["achan"]
+        imagr.nchav = (self.args["echan"]-self.args["bchan"] + 1)
         #imagr.doband = 1
         #imagr.bpver = 1
+        if self.args["excludeTelly"]:
+            imagr.antennas[1:] = self.args["excludedTellys"]
         imagr.cellsize = AIPSList([0.0001,0.0001])
         imagr.imsize = AIPSList([256,256])
         imagr.nboxes = len(self.args["CalCleanBox"])
@@ -330,6 +339,8 @@ class Cleaner(object):
         calibSelf.solint = 0.2
         calibSelf.soltype = 'L1'
         calibSelf.solmode = 'A&P'
+        if self.args["excludeTelly"]:
+            calibSelf.antennas[1:] = self.args["excludedTellys"]
         calibSelf.ncomp[1] = lastPositive
         calibSelf.timer = self.args["time"]
         #calibSelf.doband = 1
@@ -365,7 +376,7 @@ class Cleaner(object):
         lwmp.indata = imageClean
         lwmp.plver = 1
         lwmp.invers = 1
-        lwmp.outfile = os.getcwd() + '/images_{0}/{1}_run{2}'.format(self.args["date"],self.args["cal"],self.iterNum) + '.ps'
+        lwmp.outfile = os.getcwd() + '/images_{0}/{1}_time{2}'.format(self.args["date"],self.args["cal"],self.iterNum) + '.ps'
         lwmp.go()
 
         print("Running clcal")
@@ -394,6 +405,8 @@ class Cleaner(object):
         clcalFinal.snver = snVers
         clcalFinal.inver = snVers
         clcalFinal.gainver = clFring
+        if self.args["excludeTelly"]:
+            clcalFinal.antennas[1:] = self.args["excludedTellys"]
         clcalFinal.timer = self.args["time"]
         clcalFinal.refant = self.args["refTelly"]
         print("clFring = {0}".format(clFring))
@@ -408,9 +421,56 @@ class Cleaner(object):
             sys.exit("CL table number missmatch")
         print("clcalFinal created CL table {0}".format(clVers))
 
+        
+        print("Running imagr")
+        imagrSC = AIPSTask('IMAGR')
+        imagrSC.indata = uvdata
+        imagrSC.sources[1] = self.args["source"]
+        imagrSC.timerang = self.args["time"]
+        imagrSC.docalib = 1
+        imagrSC.outseq = 1
+        imagrSC.outname = self.args["source"]
+        imagrSC.gainuse = clVers
+        imagrSC.bchan = self.args["SCbchan"]
+        imagrSC.echan = self.args["SCechan"]
+        imagrSC.nchav = (self.args["SCechan"]-self.args["SCbchan"] + 1)
+        #imagrSC.doband = 1
+        #imagrSC.bpver = 1
+        if self.args["excludeTelly"]:
+            imagrSC.antennas[1:] = self.args["excludedTellys"]
+        imagrSC.cellsize = AIPSList([0.0001,0.0001])
+        imagrSC.imsize = AIPSList([256,256])
+        imagrSC.nboxes = len(self.args["CalCleanBox"])
+        imagrSC.clbox[1:] = self.args["CalCleanBox"]
+        imagrSC.niter = 1000
+        imagrSC.go()
+        print("Done with imagr")
+
+        #makes contour plot
+        kntrSC = AIPSTask('KNTR')
+        kntrSC.indata = imageCleanSC
+        kntrSC.levs = AIPSList([2,3,4,5,7,10,13,17])
+        kntrSC.dogrey = -1
+        kntrSC.dotv = -1 
+        kntrSC.dovect = - 1 
+        #kntr.blc[1] = .80*self.args["fitBox"][1]
+        #kntr.blc[2] = .80*self.args["fitBox"][2]
+        #kntr.trc[1] = 1.20*self.args["fitBox"][3]
+        #kntr.trc[2] = 1.20*self.args["fitBox"][4]
+        kntrSC.go()
+        
+        lwmpSC = AIPSTask('LWPLA')
+        lwmpSC.indata = imageCleanSC
+        lwmpSC.plver = 1
+        lwmpSC.invers = 1
+        lwmpSC.outfile = os.getcwd() + '/images_{0}/{1}_time{2}'.format(self.args["date"],self.args["source"],self.iterNum) + '.ps'
+        lwmpSC.go()
+    
         loc = location_finder.Location_finder(clVers, **self.args)
         imageClean.zap()
         imageDirty.zap()
+        #imageCleanSC.zap()
+        #imageDirtySC.zap()
         #flag.zap()
         
         with open(os.getcwd() + '/images_{0}/params{1}.txt'.format(self.args["date"],self.iterNum),'w') as f:
