@@ -120,7 +120,7 @@ class Cleaner(object):
         if flag.exists():
             flag.clrstat()
             flag.zap()
-        """
+        
         fitldFL = AIPSTask("FITLD")
         fitldFL.datain = args["flagPath"]
         fitldFL.outname = self.args["name"]
@@ -141,15 +141,18 @@ class Cleaner(object):
         tacop.inext = 'FG'
         tacop.go()        
         
-        uvdata.zap_table('BP', -1) #create a new bp table for each reftelly
-        print("Running bandpass")
-        bpass = AIPSTask('BPASS')
-        bpass.indata = uvdata
-        bpass.calsour[1] = self.args["bandPassCal"]
-        bpass.timer = self.args["time"]
-        bpass.refant = self.args["refTelly"]
-        bpass.go()
-        
+        if self.args["doBP"]:
+            uvdata.zap_table('BP', -1) #create a new bp table for each reftelly
+            print("Running bandpass")
+            bpass = AIPSTask('BPASS')
+            bpass.indata = uvdata
+            bpass.calsour[1] = self.args["bandPassCal"]
+            bpass.timer = self.args["time"]
+            bpass.refant = self.args["refTelly"]
+            if self.args["excludeTelly"]:
+                bpass.antennas[1:] = self.args["excludedTellys"]
+            bpass.go()
+        """
         uvdata.zap_table('TY', -1)
         uvdata.zap_table('GC', -1)
         print("Running antab")
@@ -199,8 +202,9 @@ class Cleaner(object):
         fring.echan = self.args["echan"]
         fring.timer = self.args["time"]
         fring.refant = self.args["refTelly"]
-        #fring.doband = 1
-        #fring.bpver = 1
+        if self.args["doBP"]:
+            fring.doband = 1
+            fring.bpver = 1
         fring.go()
         
         snVers = snVers + 1
@@ -226,8 +230,8 @@ class Cleaner(object):
         clcal.inver = snVers
         clcal.gainver = clInit #apply to original cl
         clcal.timer = self.args["time"]
-        #clcal.interpol = "ambg"
-        #clcal.opcode = "calp"
+        clcal.interpol = "ambg"
+        clcal.opcode = "calp"
         clcal.refant = self.args["refTelly"]
         clcal.go()
         """
@@ -260,8 +264,9 @@ class Cleaner(object):
         calib.solint = 0.2
         calib.soltype = 'L1'
         calib.solmode = 'P'
-        #calib.doband = 1
-        #calib.bpver = 1
+        if self.args["doBP"]:
+            calib.doband = 1
+            calib.bpver = 1
         calib.timer = self.args["time"]
         calib.refant = self.args["refTelly"]
         calib.go()
@@ -304,8 +309,9 @@ class Cleaner(object):
         imagr.bchan = self.args["bchan"]
         imagr.echan = self.args["echan"]
         imagr.nchav = (self.args["echan"]-self.args["bchan"] + 1)
-        #imagr.doband = 1
-        #imagr.bpver = 1
+        if self.args["doBP"]:
+            imagr.doband = 1
+            imagr.bpver = 1
         if self.args["excludeTelly"]:
             imagr.antennas[1:] = self.args["excludedTellys"]
         imagr.cellsize = AIPSList([0.0001,0.0001])
@@ -315,7 +321,7 @@ class Cleaner(object):
         imagr.niter = 1000
         imagr.go()
         print("Done with imagr")
-       
+
         #to get last positive row
         latestImgTable = 0
         for j in imageClean.tables:
@@ -343,8 +349,9 @@ class Cleaner(object):
             calibSelf.antennas[1:] = self.args["excludedTellys"]
         calibSelf.ncomp[1] = lastPositive
         calibSelf.timer = self.args["time"]
-        #calibSelf.doband = 1
-        #calibSelf.bpver = 1
+        if self.args["doBP"]:
+            calibSelf.doband = 1
+            calibSelf.bpver = 1
         calibSelf.go()
         snVers = snVers + 1
         SN = 0
@@ -361,7 +368,7 @@ class Cleaner(object):
         #makes contour plot
         kntr = AIPSTask('KNTR')
         kntr.indata = imageClean
-        kntr.levs = AIPSList([2,3,4,5,7,10,13,17])
+        kntr.levs = AIPSList([-1,1,2,3,4,5,7,10])
         kntr.dogrey = -1
         kntr.dotv = -1 
         kntr.dovect = - 1 
@@ -434,14 +441,15 @@ class Cleaner(object):
         imagrSC.bchan = self.args["SCbchan"]
         imagrSC.echan = self.args["SCechan"]
         imagrSC.nchav = (self.args["SCechan"]-self.args["SCbchan"] + 1)
-        #imagrSC.doband = 1
-        #imagrSC.bpver = 1
+        if self.args["doBP"]:
+            imagrSC.doband = 1
+            imagrSC.bpver = 1
         if self.args["excludeTelly"]:
             imagrSC.antennas[1:] = self.args["excludedTellys"]
         imagrSC.cellsize = AIPSList([0.0001,0.0001])
         imagrSC.imsize = AIPSList([256,256])
-        imagrSC.nboxes = len(self.args["CalCleanBox"])
-        imagrSC.clbox[1:] = self.args["CalCleanBox"]
+        imagrSC.nboxes = 1
+        imagrSC.clbox[1] = self.args["fitBox"]
         imagrSC.niter = 1000
         imagrSC.go()
         print("Done with imagr")
@@ -469,9 +477,9 @@ class Cleaner(object):
         loc = location_finder.Location_finder(clVers, **self.args)
         imageClean.zap()
         imageDirty.zap()
-        #imageCleanSC.zap()
-        #imageDirtySC.zap()
-        #flag.zap()
+        imageCleanSC.zap()
+        imageDirtySC.zap()
+        flag.zap()
         
         with open(os.getcwd() + '/images_{0}/params{1}.txt'.format(self.args["date"],self.iterNum),'w') as f:
             for l in self.args:
