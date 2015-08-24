@@ -82,6 +82,7 @@ if __name__ == "__main__":
     startTime = time.time()
     main(**args)
     print("\n--  {0} --\n".format(time.time()-startTime))
-    call(["/astroware/bin/python2.7","plotter.py"]) #need to use special python for matpltlib
+    call(["python","plotter.py"])
+    #call(["/astroware/bin/python2.7","plotter.py"]) #need to use special python for matpltlib
     #------------------------------------
 

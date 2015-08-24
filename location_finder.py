@@ -37,8 +37,8 @@ class Location_finder(object):
             imagr.outname = imgname
             imagr.outseq = 1
             imagr.cellsize = AIPSList([0.0001,0.0001])
-            imagr.imsize = AIPSList([1024,1024])
-            #imagr.imsize = AIPSList([256,256])
+            #imagr.imsize = AIPSList([1024,1024])
+            imagr.imsize = AIPSList([256,256])
             imagr.nboxes = 1
             imagr.clbox[1] = self.args["fitBox"]
             imagr.niter = 1000

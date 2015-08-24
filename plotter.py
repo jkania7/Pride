@@ -20,7 +20,7 @@ centerRA  = 59.60
 centerDEC = 55.00
 offsetMin = 3 #time set to middle of scan 
 offsetSec = 30
-dist = 1.395
+dist = 1.395 #distance to spacecraft in au
 
 print("\Assuming center RA = {0}".format(centerRA))
 print("Assumign center DEC = {0}".format(centerDEC))
@@ -93,10 +93,10 @@ def plot():
     DECstd = np.std(displacementDEC)
     RAstdM = RAstd/(1000.0*3600.0)*np.pi/180.0*dist*1.496*10**11
     DECstdM = DECstd/(1000.0*3600.0)*np.pi/180.0*dist*1.496*10**11
-    print("\033[32mRA std = {0:.3f}".format(RAstd))
-    print("DEC std = {0:.3f}".format(DECstd))
-    print("RA std = {0:.3f}".format(RAstdM))
-    print("DEC std = {0:.3f}\033[0m".format(DECstdM))
+    print("\033[32mRA std = {0:.3f} mas".format(RAstd))
+    print("DEC std = {0:.3f} mas".format(DECstd))
+    print("RA std = {0:.3f} m".format(RAstdM))
+    print("DEC std = {0:.3f} m\033[0m".format(DECstdM))
     
     """
     RArms = np.sqrt(np.mean(np.square((RA[2]-centerRA)*(360/(23+56/60+4.1/3600)*np.cos(np.deg2rad(DECmean))))))*1000
@@ -126,7 +126,8 @@ def plot():
     fig = plt.gcf()
     if raw_input("\033[33mWould you like to see the plot? \033[0m").upper() == 'YES':
         plt.show()
-    fig.savefig(os.getcwd()+'/images_{0}/displacements.pdf'.format(date))
+    fig.set_size_inches(11, 8.5)
+    fig.savefig(os.getcwd()+'/images_{0}/displacements.pdf'.format(date),dpi=200)
     
     with open(os.getcwd()+'/images_{0}/rms.txt'.format(date), 'w') as f:
         f.write("RA std = {0:.3f} mas".format(RAstd))
